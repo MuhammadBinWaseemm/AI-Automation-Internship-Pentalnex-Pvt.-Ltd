@@ -1,0 +1,90 @@
+{
+  "name": "Classification",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "149b91f5-c632-4c8f-950f-e2aaadf1ea90",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      Name: \"Ali\",\n      Email: \"ali@gmail.com\",\n      Department: \"Cyber Security\",\n      Score: 92\n    }\n  },\n  {\n    json: {\n      Name: \"Ahmed\",\n      Email: \"ahmed@gmail.com\",\n      Department: \"HR\",\n      Score: 75\n    }\n  },\n  {\n    json: {\n      Name: \"Sara\",\n      Email: \"sara@gmail.com\",\n      Department: \"Finance\",\n      Score: 45\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ee08ec5f-55bf-4888-9ad3-b8d7ebe7ffbe",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "312ccf03-ee4a-421d-9644-544298b1738a",
+              "name": "=Classification",
+              "value": "={{ $json.Score >= 80 ? \"Excellent\" : $json.Score >= 60 ? \"Good\" : \"Needs Improvement\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "7fade034-ab68-41db-afad-927ca0ebcceb",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "12647bbb-7685-4434-9a2a-584042389c3e",
+  "meta": {
+    "instanceId": "fa954e2b9d600c2d4738c6b491adc1d85243ff940a12d91400c7a95158b8759a"
+  },
+  "nodeGroups": [],
+  "id": "1Qixp9boLmfZNuMD",
+  "tags": []
+}
