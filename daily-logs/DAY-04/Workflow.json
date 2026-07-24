@@ -1,0 +1,271 @@
+{
+  "name": "IF & LOOPS",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3587493e-50c7-4fc0-a9a9-d59734b79be3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { Name: \"Ali\", Score: 95 } },\n  { json: { Name: \"Ahmed\", Score: 88 } },\n  { json: { Name: \"Sara\", Score: 82 } },\n  { json: { Name: \"Usman\", Score: 77 } },\n  { json: { Name: \"Fatima\", Score: 73 } },\n  { json: { Name: \"Hassan\", Score: 68 } },\n  { json: { Name: \"Ayesha\", Score: 59 } },\n  { json: { Name: \"Bilal\", Score: 48 } },\n  { json: { Name: \"Hamza\", Score: 34 } },\n  { json: { Name: \"Zain\", Score: 91 } }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "34fe118c-01aa-4a93-b6ea-831b0371fa26",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.Score}}",
+                    "rightValue": 80,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    },
+                    "id": "b08244df-f4a8-4a8c-9fe1-08d633b58ef2"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Excellent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d96f2695-79c5-4741-9a25-0c1344bafa5e",
+                    "leftValue": "={{$json.Score}}",
+                    "rightValue": 60,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Good"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d6523042-ccef-4dda-9f7a-19dcc8c029cc",
+                    "leftValue": "={{$json.Score}}",
+                    "rightValue": "60",
+                    "operator": {
+                      "type": "number",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Needs Improvement"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -16
+      ],
+      "id": "8c70c2fe-21cb-4d2e-baa4-79f78b3b8283",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f0c24297-e36d-40af-9b08-f67783f3ce4b",
+              "name": "Group",
+              "value": "Excellent",
+              "type": "string"
+            },
+            {
+              "id": "9aaf3118-9f47-437b-bae3-18de76dd3ab2",
+              "name": "Next Action",
+              "value": "Promote to Advanced Training",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -128
+      ],
+      "id": "8e2803d1-7e46-4698-b6d3-9114af82b843",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2812d475-b468-43bc-8b0b-6f099c2bb2f5",
+              "name": "Group",
+              "value": "Good",
+              "type": "string"
+            },
+            {
+              "id": "8cd7c859-8bff-475e-a3dc-5e96fdcd4e6f",
+              "name": "Next Action",
+              "value": "Assign Regular Practice",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        16
+      ],
+      "id": "31976b3b-be57-419a-a749-0c0aef79593e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4bb64933-9f3c-4981-820b-185ec503b8e9",
+              "name": "Group",
+              "value": "Needs Improvement",
+              "type": "string"
+            },
+            {
+              "id": "8bf3b84d-0759-460c-a2b9-682da2966704",
+              "name": "Next Action",
+              "value": "Schedule Extra Coaching",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        176
+      ],
+      "id": "28b054a0-d3e8-41f4-a25b-c43a78223965",
+      "name": "Edit Fields2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c7ada4c9-7559-437e-924f-3c8130057ba8",
+  "meta": {
+    "instanceId": "fa954e2b9d600c2d4738c6b491adc1d85243ff940a12d91400c7a95158b8759a"
+  },
+  "nodeGroups": [],
+  "id": "z06fs9mJC70dSAjU",
+  "tags": []
+}
