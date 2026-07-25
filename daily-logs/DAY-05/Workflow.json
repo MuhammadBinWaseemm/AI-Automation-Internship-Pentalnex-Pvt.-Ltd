@@ -1,0 +1,328 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9e69326b-0edb-4bc7-9c37-d3047d768d15",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12g1_N50qFJULV1K5xtbkyKVaUG4L1ayFBCLr1iPKEFw",
+          "mode": "list",
+          "cachedResultName": "internship_applications",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12g1_N50qFJULV1K5xtbkyKVaUG4L1ayFBCLr1iPKEFw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1433879196,
+          "mode": "list",
+          "cachedResultName": "internship_applications.csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12g1_N50qFJULV1K5xtbkyKVaUG4L1ayFBCLr1iPKEFw/edit#gid=1433879196"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "24d9aadf-4e93-4cda-8b62-6813230cf4e6",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oTz2EKAcpj7RHK7D",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f9e6c689-7e2e-435c-a621-5ad9f5edb8d7",
+              "leftValue": "={{$json.Email}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c69aa786-0607-4dca-a809-33bbb48d14b8",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f2bf716f-7abd-4017-a7e7-30b0c37a2c49",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n\nconst cgpa = Number(item.json.CGPA);\n\nif (cgpa >= 3.5) {\n    item.json.Status = \"Shortlisted\";\n}\nelse if (cgpa >= 3.0) {\n    item.json.Status = \"Needs Review\";\n}\nelse {\n    item.json.Status = \"Not Eligible\";\n}\n\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "61b2b14c-1b1c-4ab7-a2ab-7828052735eb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "12g1_N50qFJULV1K5xtbkyKVaUG4L1ayFBCLr1iPKEFw",
+          "mode": "list",
+          "cachedResultName": "internship_applications",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12g1_N50qFJULV1K5xtbkyKVaUG4L1ayFBCLr1iPKEFw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1433879196,
+          "mode": "list",
+          "cachedResultName": "internship_applications.csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12g1_N50qFJULV1K5xtbkyKVaUG4L1ayFBCLr1iPKEFw/edit#gid=1433879196"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Department",
+              "displayName": "Department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "University",
+              "displayName": "University",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CGPA",
+              "displayName": "CGPA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Skills",
+              "displayName": "Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        -96
+      ],
+      "id": "e8f772c8-d9aa-418a-b536-f39468b9537f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oTz2EKAcpj7RHK7D",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "hatimwarrior6@gmail.com",
+        "toEmail": "={{$json.Email}}",
+        "subject": "Internship Application Status",
+        "html": "=Hello {{$json.Name}},\n\nYour internship application has been processed.\n\nCurrent Status:\n{{$json.Status}}\n\nThank you for applying.\n\nRegards,\nHR Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        144
+      ],
+      "id": "27ebe94e-016e-44ed-a4cf-0c48f91b3014",
+      "name": "Send an Email",
+      "webhookId": "2d010c8c-3569-4bdc-b2c7-80ec039aac80",
+      "credentials": {
+        "smtp": {
+          "id": "JzTLcUUn89pmGLhQ",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "df18800a-a802-4a36-b3d5-d4d9b8d1053f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fa954e2b9d600c2d4738c6b491adc1d85243ff940a12d91400c7a95158b8759a"
+  },
+  "nodeGroups": [],
+  "id": "iBgXrCzUXHk7JujS",
+  "tags": []
+}
