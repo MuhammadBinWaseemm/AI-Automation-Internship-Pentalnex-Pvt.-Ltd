@@ -209,4 +209,4 @@ AI Automation Internship
 
 Petalnex Pvt. Ltd.
 
-## Demo Link: https://drive.google.com/file/d/1BD5c-whXIcpk3nVMZ8SMjuveBLJCzlK3/view?usp=sharing 
+Demo Link: https://drive.google.com/file/d/1BD5c-whXIcpk3nVMZ8SMjuveBLJCzlK3/view?usp=sharing 
