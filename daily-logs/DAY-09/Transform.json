@@ -1,0 +1,55 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ffe157ac-1f38-47ba-a2c9-c2de3390206d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = [\n  { name: \"  ali KHAN \", email: \"Ali.KHAN@GMAIL.COM\", score: 92 },\n  { name: \"sara ahmed\", email: \"SARA@OUTLOOK.COM\", score: 85 },\n  { name: \"  HAMZA ALI\", email: \"Hamza@Yahoo.COM\", score: 78 },\n  { name: \"fatima noor \", email: \"FATIMA@GMAIL.COM\", score: 67 },\n  { name: \"  usman RAZA \", email: \"USMAN@HOTMAIL.COM\", score: 58 },\n  { name: \"ayesha iqbal\", email: \"AYESHA@GMAIL.COM\", score: 88 },\n  { name: \"  bilal \", email: \"BILAL@GMAIL.COM\", score: 73 },\n  { name: \"zain ABBAS\", email: \"ZAIN@YAHOO.COM\", score: 81 },\n  { name: \"  maryam ali \", email: \"MARYAM@GMAIL.COM\", score: 95 },\n  { name: \"hassan khan\", email: \"HASSAN@OUTLOOK.COM\", score: 61 },\n  { name: \"  hiba noor\", email: \"HIBA@GMAIL.COM\", score: 49 },\n  { name: \"muhammad saad\", email: \"SAAD@YAHOO.COM\", score: 90 },\n  { name: \"amna\", email: \"AMNA@HOTMAIL.COM\", score: 76 },\n  { name: \"  daniyal \", email: \"DANIYAL@GMAIL.COM\", score: 82 },\n  { name: \"iqra\", email: \"IQRA@GMAIL.COM\", score: 69 }\n];\n\n// Convert to Title Case\nfunction titleCase(str) {\n  return str\n    .trim()\n    .toLowerCase()\n    .split(\" \")\n    .filter(word => word !== \"\")\n    .map(word => word.charAt(0).toUpperCase() + word.slice(1))\n    .join(\" \");\n}\n\n// Assign Grades\nfunction getGrade(score) {\n  if (score >= 90) return \"A\";\n  if (score >= 80) return \"B\";\n  if (score >= 70) return \"C\";\n  if (score >= 60) return \"D\";\n  return \"F\";\n}\n\nconst result = records\n  .map(record => ({\n    Name: titleCase(record.name),\n    Email: record.email.toLowerCase(),\n    Score: record.score,\n    Grade: getGrade(record.score)\n  }))\n  .filter(record => record.Grade === \"A\" || record.Grade === \"B\")\n  .map(record => ({ json: record }));\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "16685553-eeb9-46c1-ae18-9e1da093275f",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3bd7ec51-5320-41a9-a2fb-c8eb0c0ea14c",
+  "meta": {
+    "instanceId": "fa954e2b9d600c2d4738c6b491adc1d85243ff940a12d91400c7a95158b8759a"
+  },
+  "nodeGroups": [],
+  "id": "SacPaqVUnL4s7HtR",
+  "tags": []
+}
