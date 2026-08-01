@@ -1,0 +1,227 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "form-submission",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b90885a9-66c1-43b6-a6f9-7e98d0754cbd",
+      "name": "Webhook",
+      "webhookId": "3b962766-dbac-4df9-b6d0-653c70f9329c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d69ca0f5-6f7d-4b4d-b117-c47878b204fb",
+              "leftValue": "={{$json.body.name}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "41169eaf-b11b-4007-a7d0-3d9a0e924006",
+              "leftValue": "={{$json.body.email}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fe26ffaf-ed4e-43e2-b231-17ab62a30ae9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1v1mVIEIY5Pn4TFTF4q8lLRTbysOFRqURduEVFB8L7hk",
+          "mode": "list",
+          "cachedResultName": "DAY-10",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v1mVIEIY5Pn4TFTF4q8lLRTbysOFRqURduEVFB8L7hk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v1mVIEIY5Pn4TFTF4q8lLRTbysOFRqURduEVFB8L7hk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NAME": "={{$json.body.name}}",
+            "EMAIL": "={{$json.body.email}}",
+            "PHONE": "={{$json.body.phone}}",
+            "MESSAGE": "={{$json.body.message}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "EMAIL",
+              "displayName": "EMAIL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PHONE",
+              "displayName": "PHONE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MESSAGE",
+              "displayName": "MESSAGE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "fe9249db-8313-458b-8cbe-6f23c4cc4647",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oTz2EKAcpj7RHK7D",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "hatimwarrior6@gmail.com",
+        "toEmail": "={{$json.EMAIL}} ",
+        "subject": "Form Submission Received",
+        "emailFormat": "text",
+        "text": "=Hello {{$json.NAME}}\n\nThank you for submitting your information.\n\nWe have received your submission successfully.\n\nRegards,\nPetalnex AI Automation Internship",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "505baf29-e01a-4c6f-a00b-5db2c995ead7",
+      "name": "Send an Email",
+      "webhookId": "4ed5af35-da0e-4ce9-ac25-13d36b9c5d10",
+      "credentials": {
+        "smtp": {
+          "id": "JzTLcUUn89pmGLhQ",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cb900121-979e-45e9-a15c-4e2f14edc300",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fa954e2b9d600c2d4738c6b491adc1d85243ff940a12d91400c7a95158b8759a"
+  },
+  "nodeGroups": [],
+  "id": "al2Kjj6py9V0jGFB",
+  "tags": []
+}
