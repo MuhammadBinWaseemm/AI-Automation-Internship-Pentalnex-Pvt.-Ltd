@@ -1,0 +1,508 @@
+{
+  "name": "AI Email Classification",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2c2e9fe8-e993-41b1-b80b-2a2c7138cc7b",
+      "name": "When clicking Test workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email-field",
+              "name": "email",
+              "type": "string",
+              "value": "Hi, I would like to purchase your AI Automation services. Please send me pricing details."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5e25ff76-a256-469e-b40e-1d8ccd1d2746",
+      "name": "Set Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an email classification assistant.\n\nClassify the email into exactly one of these categories:\n- Sales\n- Support\n- Complaint\n- Invoice\n- Spam\n- General\n\nRules:\n- Return ONLY valid JSON.\n- Do not include explanations.\n- The output must follow exactly this format:\n\n{\n  \"category\": \"<Sales|Support|Complaint|Invoice|Spam|General>\"\n}\n\nEmail:\n{{ $json.email }}",
+        "batching": {}
+      },
+      "id": "89e1722f-ef86-4f3d-862f-fbb331e61038",
+      "name": "Classify Email",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "id": "a3bbd473-5f60-4417-a1fc-ea22840e957d",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        528,
+        704
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "JSlKodqjNyKlu4na",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.text).category }}",
+                    "rightValue": "Sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sales"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.text).category }}",
+                    "rightValue": "Support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Support"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.text).category }}",
+                    "rightValue": "Complaint",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Complaint"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.text).category }}",
+                    "rightValue": "Invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Invoice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.text).category }}",
+                    "rightValue": "Spam",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Spam"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.text).category }}",
+                    "rightValue": "General",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "General"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7a7056c2-7ac5-4f5d-95ac-7bd4b703cb6f",
+      "name": "Route by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "Sales"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Sales email detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "97b44441-208d-40fa-8b27-56caaaa048b3",
+      "name": "Sales Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "Support"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Support request detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "25f740c5-8fe9-41a0-8564-e28444b0684a",
+      "name": "Support Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "Complaint"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Customer complaint detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3cf4afc8-28b5-413b-b090-e2f4be5b2ca8",
+      "name": "Complaint Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "Invoice"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Invoice-related email detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fcf98d01-0457-400d-8da5-d1325f0da248",
+      "name": "Invoice Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "Spam"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Spam email detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7fa7ce5f-f5f0-4b0d-908a-37d944a4103c",
+      "name": "Spam Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "General"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "General inquiry detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e5f95cee-3cf6-407f-8891-72def929b362",
+      "name": "General Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        960
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking Test workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Email": {
+      "main": [
+        [
+          {
+            "node": "Classify Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Email": {
+      "main": [
+        [
+          {
+            "node": "Route by Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Category": {
+      "main": [
+        [
+          {
+            "node": "Sales Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Support Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Complaint Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invoice Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spam Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7132105e-8092-474b-bca1-101984a9b606",
+  "meta": {
+    "instanceId": "ea751847b725fbcbe859f8a10d24a0f020d93e24e467c27f520ef82bf1fe0e8c"
+  },
+  "nodeGroups": [],
+  "id": "UhTOpOJug531nSzn",
+  "tags": []
+}
