@@ -1,0 +1,765 @@
+{
+  "name": "AI Email Classification",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ea795cbe-70a5-49a1-b085-a35d4d63b68a",
+      "name": "When clicking Test workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email-field",
+              "name": "email",
+              "type": "string",
+              "value": "Congratulations!!  You won $5000000.  Click here now."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fde5da16-eec0-42b9-9f7f-ec0365ab6225",
+      "name": "Set Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an email analysis assistant.\n\nAnalyze the provided email and return structured information.\n\nThe category MUST be exactly one of:\nSales, Support, Complaint, Invoice, Spam, General\n\nThe priority MUST be exactly one of:\nHigh, Medium, Low\n\nThe sentiment MUST be exactly one of:\nPositive, Neutral, Negative\n\nThe department MUST be exactly one of:\nSales, Support, Customer Service, Billing, IT, General\n\nRules:\n- Return ONLY the requested structured JSON.\n- Do not return markdown.\n- Do not return explanations outside the JSON.\n- Do not add extra fields.\n- category, priority, sentiment, department, and summary are all required.\n- summary must be a short description of the email.\n\nRequired output shape:\n\n{\n  \"category\": \"Sales\",\n  \"priority\": \"High\",\n  \"sentiment\": \"Positive\",\n  \"department\": \"Sales\",\n  \"summary\": \"Short summary of the email\"\n}\n\nEmail:\n{{ $json.email }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "id": "6464a6e5-7a3d-4c12-bd43-036284e1669b",
+      "name": "Classify Email",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "id": "8a692754-8243-40b9-835b-b9e8b54775a0",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        528,
+        704
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "JSlKodqjNyKlu4na",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\":\"object\",\"properties\":{\"category\":{\"type\":\"string\",\"enum\":[\"Sales\",\"Support\",\"Complaint\",\"Invoice\",\"Spam\",\"General\"]},\"priority\":{\"type\":\"string\",\"enum\":[\"High\",\"Medium\",\"Low\"]},\"sentiment\":{\"type\":\"string\",\"enum\":[\"Positive\",\"Neutral\",\"Negative\"]},\"department\":{\"type\":\"string\",\"enum\":[\"Sales\",\"Support\",\"Customer Service\",\"Billing\",\"IT\",\"General\"]},\"summary\":{\"type\":\"string\"}},\"required\":[\"category\",\"priority\",\"sentiment\",\"department\",\"summary\"],\"additionalProperties\":false}"
+      },
+      "id": "f70c3511-f7b3-4ca0-ad7a-c4c5a7ac5c69",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "schema-valid",
+              "leftValue": "={{ [\"Sales\",\"Support\",\"Complaint\",\"Invoice\",\"Spam\",\"General\"].includes($json.output && $json.output.category) && [\"High\",\"Medium\",\"Low\"].includes($json.output && $json.output.priority) && [\"Positive\",\"Neutral\",\"Negative\"].includes($json.output && $json.output.sentiment) && [\"Sales\",\"Support\",\"Customer Service\",\"Billing\",\"IT\",\"General\"].includes($json.output && $json.output.department) && !!($json.output && $json.output.summary) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "833b66d3-31f2-411b-9213-cefb6c02533d",
+      "name": "Validate Output",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sales"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Support"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Complaint",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Complaint"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Invoice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Spam",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Spam"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "General",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "General"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b323444a-41c5-4f72-9ca0-172c8107b829",
+      "name": "Route by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            },
+            {
+              "id": "priority-field",
+              "name": "priority",
+              "type": "string",
+              "value": "={{ $json.output.priority }}"
+            },
+            {
+              "id": "sentiment-field",
+              "name": "sentiment",
+              "type": "string",
+              "value": "={{ $json.output.sentiment }}"
+            },
+            {
+              "id": "department-field",
+              "name": "department",
+              "type": "string",
+              "value": "={{ $json.output.department }}"
+            },
+            {
+              "id": "summary-field",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary }}"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Sales email detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee964d38-0f85-4686-bdb9-b9afbd3c053c",
+      "name": "Sales Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            },
+            {
+              "id": "priority-field",
+              "name": "priority",
+              "type": "string",
+              "value": "={{ $json.output.priority }}"
+            },
+            {
+              "id": "sentiment-field",
+              "name": "sentiment",
+              "type": "string",
+              "value": "={{ $json.output.sentiment }}"
+            },
+            {
+              "id": "department-field",
+              "name": "department",
+              "type": "string",
+              "value": "={{ $json.output.department }}"
+            },
+            {
+              "id": "summary-field",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary }}"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Support request detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fd017c4d-4b0a-422d-a606-1cbdeb6a60fd",
+      "name": "Support Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            },
+            {
+              "id": "priority-field",
+              "name": "priority",
+              "type": "string",
+              "value": "={{ $json.output.priority }}"
+            },
+            {
+              "id": "sentiment-field",
+              "name": "sentiment",
+              "type": "string",
+              "value": "={{ $json.output.sentiment }}"
+            },
+            {
+              "id": "department-field",
+              "name": "department",
+              "type": "string",
+              "value": "={{ $json.output.department }}"
+            },
+            {
+              "id": "summary-field",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary }}"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Customer complaint detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5df67db3-1416-40ba-ab0b-75445e05ea97",
+      "name": "Complaint Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            },
+            {
+              "id": "priority-field",
+              "name": "priority",
+              "type": "string",
+              "value": "={{ $json.output.priority }}"
+            },
+            {
+              "id": "sentiment-field",
+              "name": "sentiment",
+              "type": "string",
+              "value": "={{ $json.output.sentiment }}"
+            },
+            {
+              "id": "department-field",
+              "name": "department",
+              "type": "string",
+              "value": "={{ $json.output.department }}"
+            },
+            {
+              "id": "summary-field",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary }}"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Invoice-related email detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "364a653f-c565-4d86-947d-c28acbdbd272",
+      "name": "Invoice Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            },
+            {
+              "id": "priority-field",
+              "name": "priority",
+              "type": "string",
+              "value": "={{ $json.output.priority }}"
+            },
+            {
+              "id": "sentiment-field",
+              "name": "sentiment",
+              "type": "string",
+              "value": "={{ $json.output.sentiment }}"
+            },
+            {
+              "id": "department-field",
+              "name": "department",
+              "type": "string",
+              "value": "={{ $json.output.department }}"
+            },
+            {
+              "id": "summary-field",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary }}"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "Spam email detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "45195b4c-9471-4015-9d51-ecf1186608d7",
+      "name": "Spam Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-field",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            },
+            {
+              "id": "priority-field",
+              "name": "priority",
+              "type": "string",
+              "value": "={{ $json.output.priority }}"
+            },
+            {
+              "id": "sentiment-field",
+              "name": "sentiment",
+              "type": "string",
+              "value": "={{ $json.output.sentiment }}"
+            },
+            {
+              "id": "department-field",
+              "name": "department",
+              "type": "string",
+              "value": "={{ $json.output.department }}"
+            },
+            {
+              "id": "summary-field",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary }}"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "General inquiry detected."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9c11a3c6-771d-4acc-a8b2-ee6850e415e1",
+      "name": "General Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status-field",
+              "name": "status",
+              "type": "string",
+              "value": "fallback"
+            },
+            {
+              "id": "message-field",
+              "name": "message",
+              "type": "string",
+              "value": "AI response failed validation"
+            },
+            {
+              "id": "email-field",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Set Email').item.json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2513549d-a406-4a24-9fab-7826496a7693",
+      "name": "Fallback",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        800,
+        736
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking Test workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Email": {
+      "main": [
+        [
+          {
+            "node": "Classify Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Email": {
+      "main": [
+        [
+          {
+            "node": "Validate Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify Email",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Output": {
+      "main": [
+        [
+          {
+            "node": "Route by Category",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Category": {
+      "main": [
+        [
+          {
+            "node": "Sales Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Support Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Complaint Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invoice Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spam Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3d2ca13b-7b17-4c7a-b4d1-4066995f4196",
+  "meta": {
+    "instanceId": "ea751847b725fbcbe859f8a10d24a0f020d93e24e467c27f520ef82bf1fe0e8c"
+  },
+  "nodeGroups": [],
+  "id": "UhTOpOJug531nSzn",
+  "tags": []
+}
