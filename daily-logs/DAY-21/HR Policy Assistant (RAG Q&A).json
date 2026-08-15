@@ -1,0 +1,226 @@
+{
+  "name": "HR Policy Assistant (RAG Q&A)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "e50f9969-957e-44b1-a798-b46ce8d453c9",
+      "name": "User Question",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "b1de4190-c2ad-4bb3-a48a-e708aff4d8ff"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "tableName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "documents"
+        },
+        "prompt": "={{ $json.chatInput }}",
+        "topK": 5,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "2b1e3354-c176-427f-9a5e-5219d87ba27d",
+      "name": "Supabase Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        112
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "h6Aeyt2zLqRuJXO2",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "id": "05904f3d-cfcf-4742-9619-e9ba22f72b5d",
+      "name": "OpenAI Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "10LWllk5OWdER1rZ",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst question = $('User Question').first().json.chatInput || '';\n\nconst blocks = [];\nconst sources = [];\n\nfor (const it of items) {\n  const j = it.json || {};\n  const doc = j.document || j;\n  const content = doc.pageContent || doc.content || '';\n  const meta = doc.metadata || j.metadata || {};\n  if (!content) continue;\n\n  const topic = meta.topic || meta.source || '';\n  const id = meta.id || '';\n  const label = [topic, id ? '(id: ' + id + ')' : ''].filter(Boolean).join(' ');\n\n  blocks.push('[Source: ' + (label || 'unknown') + ']\\n' + content);\n  if (label) sources.push(label);\n}\n\nconst uniqueSources = [...new Set(sources)];\nconst context = blocks.join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    question,\n    context: context || 'NO_CONTEXT_FOUND',\n    sources: uniqueSources,\n    sourcesText: uniqueSources.length ? uniqueSources.join('; ') : '',\n  },\n}];"
+      },
+      "id": "7c6fa9b0-1ca5-4990-b5f4-5cd329d2b127",
+      "name": "Build Context & Sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.question }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a Company / HR Policy Assistant.\n\nAnswer questions ONLY using the information contained in the retrieved knowledge-base context below.\n\nDo not use general knowledge or make assumptions.\n\nIf the retrieved context does not contain enough information to answer the question, respond EXACTLY with this sentence and nothing else:\nInformation not available in the knowledge base.\n\nNever invent, guess, or create company policies.\n\nWhen you can answer, provide the source/reference of the retrieved information at the end in the form: \"Source: <topic/reference>\".\n\n===== RETRIEVED KNOWLEDGE-BASE CONTEXT =====\n{{ $json.context }}\n===== END OF CONTEXT =====\n\nAvailable source references: {{ $json.sourcesText }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "626d7fa1-0684-4a02-9ff4-81e1d201798d",
+      "name": "Grounded Answer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        800,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "b889398f-9fdc-400e-9f2e-70bbe8383446",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "10LWllk5OWdER1rZ",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const fallback = 'Information not available in the knowledge base.';\nconst raw = ($json.text || $json.output || $json.response || '').toString().trim();\nconst sourcesText = $('Build Context & Sources').item.json.sourcesText || '';\n\nconst isFallback =\n  raw.toLowerCase().includes('information not available in the knowledge base');\n\nlet output;\nif (!raw || isFallback) {\n  // Safe fallback: never answer from general knowledge, never show sources\n  output = fallback;\n} else {\n  const hasSourceLine = /source\\s*:/i.test(raw);\n  output = hasSourceLine || !sourcesText\n    ? raw\n    : raw + '\\n\\nSource: ' + sourcesText;\n}\n\nreturn { json: { output, answer: output, sources: sourcesText, grounded: !isFallback && !!raw } };"
+      },
+      "id": "f0b1176f-1dd8-460a-8ecb-ff531d7fd500",
+      "name": "Format Answer + Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "User Question": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Build Context & Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Context & Sources": {
+      "main": [
+        [
+          {
+            "node": "Grounded Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grounded Answer": {
+      "main": [
+        [
+          {
+            "node": "Format Answer + Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Grounded Answer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "68b04409-8a26-4c53-8107-cfb0b70f2912",
+  "meta": {
+    "instanceId": "15d5fb98d517612b50f38341554e1cd63803c9b4773acdbda2390c8a3e51ff22"
+  },
+  "nodeGroups": [],
+  "id": "LwACmOK15WOsiG14",
+  "tags": []
+}
