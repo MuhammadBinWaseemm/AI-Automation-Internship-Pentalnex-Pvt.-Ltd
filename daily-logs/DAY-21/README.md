@@ -58,7 +58,6 @@ The assistant does not guess or create policies.
 
 ## Tech Stack
 
-* Python
 * RAG
 * Embeddings
 * Vector Store
