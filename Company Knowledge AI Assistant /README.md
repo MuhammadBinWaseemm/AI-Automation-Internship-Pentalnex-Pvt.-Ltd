@@ -1,7 +1,7 @@
-# Company Knowledge AI Assistant — Day 24
+# Company Knowledge AI Assistant
 
 ## Project Name
-Company Knowledge AI Assistant — Day 24
+Company Knowledge AI Assistant 
 
 ---
 
