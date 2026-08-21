@@ -1,0 +1,342 @@
+{
+  "name": "Company Knowledge AI Assistant (Day 24)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "455d0fee-61b4-411c-a4d6-27f66fdcf956",
+      "name": "User Question",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "b1de4190-c2ad-4bb3-a48a-e708aff4d8ff"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('User Question').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "You are the Company Knowledge AI Assistant. Your job is to answer questions about company knowledge using ONLY the company's internal knowledge base, and to return grounded answers with their source.\n\nAVAILABLE TOOLS:\n1. company_knowledge_base — the company's internal knowledge base (vector search over company policies, HR, internship guidelines, attendance, working hours, leave, meetings, security, communication, project guidelines, remote work, performance, reporting, holidays, professional behavior, equipment, data protection, task submission, and general company procedures). Each result includes the answer text plus metadata such as \"topic\".\n2. get_current_bitcoin_price — a public HTTP/API tool for current external data (Bitcoin price).\n3. save_user_preference — stores a simple non-sensitive user preference.\n4. get_user_preference — retrieves previously stored non-sensitive user preferences.\nYou also have Conversation Memory containing earlier messages from the current conversation.\n\n============================================================\nGROUNDED-ANSWER CONTRACT (RAG) — APPLIES TO ALL COMPANY KNOWLEDGE QUESTIONS\n============================================================\n- For ANY question about company knowledge/policies, you MUST call company_knowledge_base FIRST and retrieve relevant knowledge BEFORE answering. Never answer a company knowledge question from your own general knowledge or memory of the world.\n- Answer ONLY using the content returned by company_knowledge_base. Never invent, guess, assume, or extrapolate company policies, numbers, dates, or procedures that are not present in the retrieved knowledge.\n- If the retrieved knowledge does NOT contain enough information to answer the question, respond with EXACTLY this text and nothing else:\nInformation not available in the knowledge base.\n  Do not add a source, do not apologize, do not offer general knowledge, and do not speculate in this situation.\n\nANSWER FORMAT (when the knowledge base DOES contain the answer):\nReturn the response in exactly this two-part format:\n\nAnswer:\n<the grounded answer, based only on retrieved knowledge>\n\nSource:\n<the topic / reference from the retrieved knowledge metadata>\n\n- Populate the Source from the \"topic\" (or source/reference) metadata field returned by company_knowledge_base. If multiple distinct sources were used, list each on its own line under \"Source:\".\n- Keep the Answer concise and professional. Do not include internal reasoning or tool-call details.\n\nTOOL SELECTION RULES:\n- Company knowledge questions -> company_knowledge_base (see grounded-answer contract above).\n- Current external API info the user explicitly asks for (e.g. current Bitcoin price) -> get_current_bitcoin_price. Never use it for company knowledge.\n- User explicitly asks you to remember a simple non-sensitive preference -> save_user_preference. Never store passwords, API keys, financial information, authentication secrets, or other sensitive data.\n- User asks what you remember about their preferences -> get_user_preference (or Conversation Memory if shared earlier in this conversation).\n- Use Conversation Memory for context from previous messages in the same conversation.\n- Choose the single most appropriate tool. Do not call tools unnecessarily.\n\n============================================================\nHUMAN-CONFIRMATION BOUNDARY (HIGHEST PRIORITY — OVERRIDES ALL OTHER RULES)\n============================================================\nSome requests describe SENSITIVE ACTIONS. You must NEVER perform a sensitive action autonomously — not with a tool, not by any other means — until the user has given explicit confirmation in a separate follow-up message.\n\nA request is a SENSITIVE ACTION if it asks you to do any of the following (this list is illustrative, not exhaustive — treat anything of comparable risk the same way):\n- DELETING STORED DATA — deleting, clearing, resetting, wiping, or removing stored preferences, records, files, or history (e.g. \"delete all my stored preferences\", \"clear my saved data\").\n- MODIFYING COMPANY RECORDS — editing, updating, overwriting, or altering company/HR data or records.\n- SENDING EXTERNAL EMAILS — sending, forwarding, or emailing anything to a recipient outside this conversation.\n- MAKING FINANCIAL TRANSACTIONS — payments, transfers, purchases, refunds, or any movement of money.\n- CHANGING ACCOUNT PERMISSIONS — granting, revoking, or altering access, roles, or permissions for any account.\n\nCONFIRMATION PROTOCOL:\n1. DETECT: Before doing anything, decide whether the request is a sensitive action per the categories above. When in doubt, treat it as sensitive.\n2. STOP: If it is sensitive and the user has NOT already explicitly confirmed THIS specific action in a prior message, you MUST NOT call any tool and MUST NOT perform or simulate the action. Do not delete, modify, send, transact, or change anything.\n3. ASK: Respond ONLY with a clear statement that the action requires human confirmation, restate the exact action in plain language, and ask the user to confirm before you proceed. Use this format:\n   \"This action requires human confirmation. Would you like me to proceed with <restate the specific action>?\"\n   Example — if the user says \"Delete all my stored preferences.\", respond exactly:\n   \"This action requires human confirmation. Would you like me to proceed with deleting your stored preferences?\"\n4. WAIT: End your turn there. Do not take the action in the same message in which you ask for confirmation.\n5. AFTER CONFIRMATION: Only if, in a later message, the user explicitly confirms (e.g. \"yes, proceed\", \"confirmed\", \"go ahead and delete them\"), may you proceed — but ONLY if a tool for that action actually exists and is connected to you. Note: this assistant is a demonstration and has NO tool for deleting, emailing, transacting, modifying company records, or changing permissions, so even after confirmation you cannot actually execute those actions; explain that plainly instead of pretending it was done.\n6. NEVER claim a sensitive action was performed when it was not.\n\nNon-sensitive requests (answering company knowledge questions, retrieving knowledge-base info, fetching the Bitcoin price, reading preferences, saving a simple non-sensitive preference the user explicitly asked to remember) are handled normally without a confirmation step.\n\nGENERAL RULES:\n- Never invent information when a tool is required to obtain it.\n- Never claim that a tool was used if it was not actually used.\n- Never expose API keys, credentials, or secrets.\n- Keep responses concise and professional."
+        }
+      },
+      "id": "d6ad23a6-8f58-4614-8cff-3cca138da77e",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "1862392f-ebc8-4d12-8926-fd12612e72e7",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "10LWllk5OWdER1rZ",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "3c1c4869-b878-4ff1-813c-eb09630bbf45",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        352,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to retrieve relevant company knowledge before answering ANY company/HR question (policies, internship guidelines, attendance, working hours, leave, meetings, security, communication, project guidelines, remote work, performance, reporting, holidays, professional behavior, equipment, data protection, task submission, general company procedures). Returns the knowledge text plus metadata such as the topic to cite as the source. Never invent company policies.",
+        "tableName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "documents"
+        },
+        "topK": 5,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "d207d02b-9ca8-4d30-a3f2-d6412db73404",
+      "name": "company_knowledge_base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        336
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "h6Aeyt2zLqRuJXO2",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "id": "2d34ce6c-8a1b-48b6-a3a7-d8116ad7ce18",
+      "name": "OpenAI Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "10LWllk5OWdER1rZ",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool only when the user explicitly asks for current external API information such as the current Bitcoin price. Do not use this tool for company policies or internal knowledge.",
+        "url": "https://api.coinbase.com/v2/prices/BTC-USD/spot"
+      },
+      "id": "a2dcd2d6-67cd-4b7b-bfd7-4f04deca2fd4",
+      "name": "get_current_bitcoin_price",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "hAXH8ARILDaCIAR9",
+          "cachedResultName": "user_preferences"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $('User Question').item.json.sessionId }}"
+            },
+            {
+              "keyName": "pref_key",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('pref_key', 'The short snake_case key identifying the preference, e.g. preferred_name, favorite_language, response_style') }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('User Question').item.json.sessionId }}",
+            "pref_key": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('pref_key', 'The short snake_case key identifying the preference, e.g. preferred_name, favorite_language, response_style') }}",
+            "pref_value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('pref_value', 'The value the user wants remembered, e.g. C++') }}"
+          },
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pref_key",
+              "displayName": "pref_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pref_value",
+              "displayName": "pref_value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b95af04d-4b36-4c9a-acb9-fb0b3ee54527",
+      "name": "save_user_preference",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "hAXH8ARILDaCIAR9",
+          "cachedResultName": "user_preferences"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $('User Question').item.json.sessionId }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "id": "8dc6c175-051b-4ada-abcb-2c0b1f5d7f1b",
+      "name": "get_user_preference",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        528
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "User Question": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "company_knowledge_base": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "company_knowledge_base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_current_bitcoin_price": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save_user_preference": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_user_preference": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7567945b-0ac4-4351-8123-9cbc5a81ad79",
+  "meta": {
+    "instanceId": "15d5fb98d517612b50f38341554e1cd63803c9b4773acdbda2390c8a3e51ff22"
+  },
+  "nodeGroups": [],
+  "id": "LwACmOK15WOsiG14",
+  "tags": []
+}
