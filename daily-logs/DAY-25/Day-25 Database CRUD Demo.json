@@ -1,0 +1,212 @@
+{
+  "name": "Day-25 Database CRUD Demo",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "34a4e49f-e18b-4a9a-b27e-7fdd5f801a48",
+      "name": "Start CRUD Demo",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO tickets (customer_name, email, category, priority, status, ai_summary, created_at)\nVALUES ('Jan Doe', 'jan.doe@example.com', 'Billing', 'High', 'Open', 'Customer reports beig charged twice for the same invoice and requests a refund.', NOW())\nRETURNING *;",
+        "options": {}
+      },
+      "id": "5a56a8e4-cba2-4bc5-b61b-55aef48c5995",
+      "name": "CREATE Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "GK4vstuFNPWpHOVJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM tickets WHERE ticket_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('CREATE Ticket').item.json.ticket_id }}"
+        }
+      },
+      "id": "602eea33-b224-44fa-ae40-0b210fb1f8d3",
+      "name": "READ Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        448,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "GK4vstuFNPWpHOVJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE tickets SET status = 'Resolved' WHERE ticket_id = $1 RETURNING *;",
+        "options": {
+          "queryReplacement": "={{ $('CREATE Ticket').item.json.ticket_id }}"
+        }
+      },
+      "id": "0d71c1be-8334-4c53-a96c-f1560be5bc76",
+      "name": "UPDATE Ticket Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        672,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "GK4vstuFNPWpHOVJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM tickets WHERE ticket_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('CREATE Ticket').item.json.ticket_id }}"
+        }
+      },
+      "id": "0c5b4640-8110-4c56-8de6-86138ceac2c5",
+      "name": "READ Updated Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        896,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "GK4vstuFNPWpHOVJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM tickets WHERE ticket_id = $1 RETURNING ticket_id;",
+        "options": {
+          "queryReplacement": "={{ $('CREATE Ticket').item.json.ticket_id }}"
+        }
+      },
+      "id": "d9bada89-d850-4ba3-ace6-e8f17a1ac745",
+      "name": "DELETE Test Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1120,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "GK4vstuFNPWpHOVJ",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start CRUD Demo": {
+      "main": [
+        [
+          {
+            "node": "CREATE Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CREATE Ticket": {
+      "main": [
+        [
+          {
+            "node": "READ Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "READ Ticket": {
+      "main": [
+        [
+          {
+            "node": "UPDATE Ticket Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UPDATE Ticket Status": {
+      "main": [
+        [
+          {
+            "node": "READ Updated Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "READ Updated Ticket": {
+      "main": [
+        [
+          {
+            "node": "DELETE Test Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "77f27172-8a5a-4f95-80a5-5d3635ab7dbb",
+  "meta": {
+    "instanceId": "15d5fb98d517612b50f38341554e1cd63803c9b4773acdbda2390c8a3e51ff22"
+  },
+  "nodeGroups": [
+    {
+      "id": "58f3d12d-d864-4db1-b62e-dd40ddf2e0db",
+      "name": "CRUD Operations",
+      "nodeIds": [
+        "5a56a8e4-cba2-4bc5-b61b-55aef48c5995",
+        "602eea33-b224-44fa-ae40-0b210fb1f8d3",
+        "0d71c1be-8334-4c53-a96c-f1560be5bc76",
+        "0c5b4640-8110-4c56-8de6-86138ceac2c5",
+        "d9bada89-d850-4ba3-ace6-e8f17a1ac745"
+      ],
+      "description": "Sequential Create → Read → Update → Read → Delete on the tickets table, passing the generated ticket_id between steps."
+    }
+  ],
+  "id": "JMdCEhe0En11Y8Th",
+  "tags": []
+}
