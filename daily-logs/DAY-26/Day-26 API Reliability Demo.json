@@ -1,0 +1,237 @@
+{
+  "name": "Day-26 API Reliability Demo",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e86ac5b0-d4d3-453b-aead-0b2f77bc2e09",
+      "name": "When clicking Test workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/zen",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "475285fc-6578-4308-a288-159caa254c28",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        96
+      ],
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "handled",
+              "name": "handled",
+              "value": "={{ true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "retriesExhausted",
+              "name": "note",
+              "value": "HTTP request failed after automatic retries; routing to error logging and admin notification.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "492682d2-0aa6-480a-9cc4-ec86d153c32b",
+      "name": "Retry / Error Handling",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf-name",
+              "name": "workflowName",
+              "value": "={{ $workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "node-name",
+              "name": "nodeName",
+              "value": "HTTP Request",
+              "type": "string"
+            },
+            {
+              "id": "err-msg",
+              "name": "errorMessage",
+              "value": "={{ $json.error?.message || $json.error || \"HTTP Request failed\" }}",
+              "type": "string"
+            },
+            {
+              "id": "exec-id",
+              "name": "executionId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "ts",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5806b8a0-89ab-48a0-aed8-e4e74598dd3c",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "muhammadbinwaseem94@gmail.com",
+        "subject": "=[n8n ALERT] \"{{ $json.nodeName }}\" failed in {{ $json.workflowName }}",
+        "emailType": "text",
+        "message": "=An API request failed in an n8n workflow after automatic retries.\n\nWorkflow: {{ $json.workflowName }}\nFailed node: {{ $json.nodeName }}\nError message: {{ $json.errorMessage }}\nExecution ID: {{ $json.executionId }}\nTimestamp: {{ $json.timestamp }}\n",
+        "options": {}
+      },
+      "id": "b29c0ab7-1053-430b-8fb7-9d7e824e16cc",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        192
+      ],
+      "webhookId": "ef9b6366-33fb-47ca-ad98-f0ac298d3ad1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4pVRSNNkuTfq41g8",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "apiResponse",
+              "name": "apiResponse",
+              "value": "={{ JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "ok-ts",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "30bb3816-b2c3-475d-8765-2ad89cc5806c",
+      "name": "Success - Continue",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking Test workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Success - Continue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Retry / Error Handling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry / Error Handling": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Error": {
+      "main": [
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "vS7KvLOFSWCOwQaD"
+  },
+  "versionId": "7c91ea7d-316c-4b8c-b9a3-f1d7da9c14c8",
+  "meta": {
+    "instanceId": "15d5fb98d517612b50f38341554e1cd63803c9b4773acdbda2390c8a3e51ff22"
+  },
+  "nodeGroups": [],
+  "id": "epHdo0N5LpV8aFmy",
+  "tags": []
+}

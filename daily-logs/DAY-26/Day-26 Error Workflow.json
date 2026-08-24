@@ -1,0 +1,130 @@
+{
+  "name": "Day-26 Error Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7ce26645-0737-4972-9afe-c3b5ac08177f",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf-name",
+              "name": "workflowName",
+              "value": "={{ $json.workflow?.name || \"unknown\" }}",
+              "type": "string"
+            },
+            {
+              "id": "failed-node",
+              "name": "failedNode",
+              "value": "={{ $json.execution?.lastNodeExecuted || \"unknown\" }}",
+              "type": "string"
+            },
+            {
+              "id": "err-msg",
+              "name": "errorMessage",
+              "value": "={{ $json.execution?.error?.message || $json.trigger?.error?.message || \"unknown\" }}",
+              "type": "string"
+            },
+            {
+              "id": "exec-id",
+              "name": "executionId",
+              "value": "={{ $json.execution?.id || \"unknown\" }}",
+              "type": "string"
+            },
+            {
+              "id": "exec-url",
+              "name": "executionUrl",
+              "value": "={{ $json.execution?.url || \"n/a\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ts",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "89a4b680-4cfa-4cad-a1af-6e4e837038d7",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "muhammadbinwaseem94@gmail.com",
+        "subject": "=[n8n ERROR] {{ $json.workflowName }} failed at node \"{{ $json.failedNode }}\"",
+        "emailType": "text",
+        "message": "=An n8n workflow execution failed.\n\nWorkflow: {{ $json.workflowName }}\nFailed node: {{ $json.failedNode }}\nError message: {{ $json.errorMessage }}\nExecution ID: {{ $json.executionId }}\nExecution URL: {{ $json.executionUrl }}\nTimestamp: {{ $json.timestamp }}\n",
+        "options": {}
+      },
+      "id": "a1508db7-5406-4b08-843b-f55c5dc7b7bb",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "webhookId": "81cce1c3-d905-418e-ab9f-384b123d3f27",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4pVRSNNkuTfq41g8",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Error": {
+      "main": [
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c00de3a3-a5bf-49f9-b3c6-59c1c0aa44d0",
+  "meta": {
+    "instanceId": "15d5fb98d517612b50f38341554e1cd63803c9b4773acdbda2390c8a3e51ff22"
+  },
+  "nodeGroups": [],
+  "id": "vS7KvLOFSWCOwQaD",
+  "tags": []
+}
