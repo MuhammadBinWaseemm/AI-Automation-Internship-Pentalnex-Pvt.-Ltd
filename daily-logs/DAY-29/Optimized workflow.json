@@ -1,0 +1,853 @@
+{
+  "name": "AI Customer Support Triage System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-triage",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "6902c4f5-15d8-4cb3-94c9-069c2e5fbdde",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        336
+      ],
+      "webhookId": "0a767946-85dd-438f-bfbc-e3daa5cb38c8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI customer support triage assistant.\n\nAnalyze the customer's support message and classify it for an automated support system.\n\nYou MUST return structured data containing exactly these fields:\n\ncategory\npriority\nsentiment\ndepartment\nsummary\nsuggested_response\n\nCATEGORY:\nThe category MUST be exactly one of:\n- Billing\n- Technical Support\n- Account\n- Product\n- Complaint\n- General\n\nPRIORITY:\nThe priority MUST be exactly one of:\n- High\n- Medium\n- Low\n\nSENTIMENT:\nThe sentiment MUST be exactly one of:\n- Positive\n- Neutral\n- Negative\n\nDEPARTMENT:\nThe department MUST be exactly one of:\n- Billing\n- Technical Support\n- Account Management\n- Product Support\n- Customer Service\n- General\n\nRULES:\n- Analyze only the information contained in the customer message.\n- Do not invent customer information.\n- High priority should be used for urgent issues such as security concerns, account access problems, serious billing problems, service outages, or issues requiring immediate attention.\n- Medium priority should be used for normal support requests that require action but are not urgent.\n- Low priority should be used for general questions or non-urgent requests.\n- The summary must briefly explain the customer's issue.\n- suggested_response must be a professional and helpful response to the customer.\n- Do not include markdown outside the structured output.\n- Do not add extra fields.\n\nCUSTOMER MESSAGE:\n\n{{ $json.body.message }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "id": "01a7c189-2e31-431f-a72e-138b8a242b25",
+      "name": "AI Analysis",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "id": "d750c89d-d894-4275-bb5a-7fef81292272",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        464,
+        320
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "NC6gRzyTa0sRw7GO",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\":\"object\",\"properties\":{\"category\":{\"type\":\"string\",\"enum\":[\"Billing\",\"Technical Support\",\"Account\",\"Product\",\"Complaint\",\"General\"]},\"priority\":{\"type\":\"string\",\"enum\":[\"High\",\"Medium\",\"Low\"]},\"sentiment\":{\"type\":\"string\",\"enum\":[\"Positive\",\"Neutral\",\"Negative\"]},\"department\":{\"type\":\"string\",\"enum\":[\"Billing\",\"Technical Support\",\"Account Management\",\"Product Support\",\"Customer Service\",\"General\"]},\"summary\":{\"type\":\"string\"},\"suggested_response\":{\"type\":\"string\"}},\"required\":[\"category\",\"priority\",\"sentiment\",\"department\",\"summary\",\"suggested_response\"],\"additionalProperties\":false}"
+      },
+      "id": "dd9a08e0-546f-4162-8c47-3de43f8eae01",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "schema-valid",
+              "leftValue": "={{ [\"Billing\",\"Technical Support\",\"Account\",\"Product\",\"Complaint\",\"General\"].includes($json.output && $json.output.category) && [\"High\",\"Medium\",\"Low\"].includes($json.output && $json.output.priority) && [\"Positive\",\"Neutral\",\"Negative\"].includes($json.output && $json.output.sentiment) && [\"Billing\",\"Technical Support\",\"Account Management\",\"Product Support\",\"Customer Service\",\"General\"].includes($json.output && $json.output.department) && !!($json.output && $json.output.summary) && !!($json.output && $json.output.suggested_response) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "98be0ce3-cc14-41a8-960b-d05afabe2e1a",
+      "name": "Validate Output",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Billing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Billing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Technical Support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Technical Support"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Account",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Account"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Product",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Product"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Complaint",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Complaint"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "General",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "General"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "711d0ac8-62e4-44c3-a522-315338d86512",
+      "name": "Switch by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "name",
+              "name": "name",
+              "type": "string",
+              "value": "={{ $(\"Webhook\").item.json.body.name }}"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $(\"Webhook\").item.json.body.email }}"
+            },
+            {
+              "id": "original_message",
+              "name": "original_message",
+              "type": "string",
+              "value": "={{ $(\"Webhook\").item.json.body.message }}"
+            },
+            {
+              "id": "category",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            },
+            {
+              "id": "priority",
+              "name": "priority",
+              "type": "string",
+              "value": "={{ $json.output.priority }}"
+            },
+            {
+              "id": "sentiment",
+              "name": "sentiment",
+              "type": "string",
+              "value": "={{ $json.output.sentiment }}"
+            },
+            {
+              "id": "department",
+              "name": "department",
+              "type": "string",
+              "value": "={{ $json.output.department }}"
+            },
+            {
+              "id": "summary",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary }}"
+            },
+            {
+              "id": "suggested_response",
+              "name": "suggested_response",
+              "type": "string",
+              "value": "={{ $json.output.suggested_response }}"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "type": "string",
+              "value": "Open"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "68a63a35-a689-4fef-98c9-de1d19530336",
+      "name": "Store Ticket",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1248,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Non-PII triage log. Passes items through unchanged.\nconst items = $input.all();\nfor (const item of items) {\n  const j = item.json || {};\n  console.log(JSON.stringify({\n    log: 'ticket_triaged',\n    workflow: $workflow.name,\n    workflowId: $workflow.id,\n    executionId: $execution.id,\n    timestamp: new Date().toISOString(),\n    category: j.category,\n    priority: j.priority,\n    status: j.status,\n    urgentPathExpected: j.priority === 'High'\n  }));\n}\nreturn items;"
+      },
+      "id": "61600f8a-48ba-4fef-a16b-aae0eeea13aa",
+      "name": "Log Ticket",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Store Ticket\").item.json.email }}",
+        "subject": "=We received your support request [{{ $(\"Store Ticket\").item.json.category }}]",
+        "emailType": "text",
+        "message": "=Hi {{ $(\"Store Ticket\").item.json.name }},\n\nThank you for contacting our support team. Your request has been received and is now being processed.\n\n{{ $(\"Store Ticket\").item.json.suggested_response }}\n\nReference summary: {{ $(\"Store Ticket\").item.json.summary }}\n\nBest regards,\nCustomer Support Team",
+        "options": {}
+      },
+      "id": "3b0cd9e6-46f1-48e5-b885-c9dab134fb81",
+      "name": "Acknowledgment Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        64
+      ],
+      "webhookId": "6d8f2d3d-610c-4902-88c5-34fb0fd0e104",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4pVRSNNkuTfq41g8",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-high",
+              "leftValue": "={{ $(\"Store Ticket\").item.json.priority }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8c84912b-6867-4795-af87-0cf74ab73fec",
+      "name": "Check Priority",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1696,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconsole.log(JSON.stringify({\n  log: 'urgent_path',\n  workflow: $workflow.name,\n  executionId: $execution.id,\n  timestamp: new Date().toISOString(),\n  category: $('Store Ticket').item.json.category,\n  priority: $('Store Ticket').item.json.priority,\n  urgentPathTriggered: true\n}));\nreturn items;"
+      },
+      "id": "c03c76e9-fa09-4b3f-8cd1-191faf9bcc92",
+      "name": "Log Urgent Path",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "muhammadbinwaseem27@gmail.com",
+        "subject": "=APPROVAL NEEDED — High priority ticket from {{ $(\"Store Ticket\").item.json.name }} [{{ $(\"Store Ticket\").item.json.category }}]",
+        "message": "=A HIGH priority / sensitive support ticket requires human approval before the sensitive action is taken.\n\nThe AI recommendation below is NOT final. Only your decision authorizes the action.\n\nCustomer name: {{ $(\"Store Ticket\").item.json.name }}\nCustomer email: {{ $(\"Store Ticket\").item.json.email }}\n\nCustomer message:\n{{ $(\"Store Ticket\").item.json.original_message }}\n\n--- AI Analysis ---\nAI category: {{ $(\"Store Ticket\").item.json.category }}\nAI priority: {{ $(\"Store Ticket\").item.json.priority }}\nAI summary:\n{{ $(\"Store Ticket\").item.json.summary }}\n\nAI suggested response:\n{{ $(\"Store Ticket\").item.json.suggested_response }}\n\nPlease Approve to proceed with the sensitive action, or Reject to stop it.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "disapproveLabel": "Reject"
+          }
+        },
+        "options": {}
+      },
+      "id": "f986e403-088c-4a28-88b9-c8a68ef4d616",
+      "name": "Human Approval",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        256
+      ],
+      "webhookId": "6f3532b6-38b7-4be8-886a-cbf2514f18df",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4pVRSNNkuTfq41g8",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-approved",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e0b802f5-3267-45e8-8aa8-d2175de90564",
+      "name": "Check Approval",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2144,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "muhammadbinwaseem27@gmail.com",
+        "subject": "=URGENT [{{ $(\"Store Ticket\").item.json.category }}] ticket from {{ $(\"Store Ticket\").item.json.name }}",
+        "emailType": "text",
+        "message": "=A HIGH priority support ticket requires immediate attention.\n\nCustomer name: {{ $(\"Store Ticket\").item.json.name }}\nCustomer email: {{ $(\"Store Ticket\").item.json.email }}\nCategory: {{ $(\"Store Ticket\").item.json.category }}\nPriority: {{ $(\"Store Ticket\").item.json.priority }}\nDepartment: {{ $(\"Store Ticket\").item.json.department }}\n\nSummary:\n{{ $(\"Store Ticket\").item.json.summary }}\n\nOriginal message:\n{{ $(\"Store Ticket\").item.json.original_message }}",
+        "options": {}
+      },
+      "id": "1015061e-34ea-4ffd-8004-75f4af12eec3",
+      "name": "Urgent Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        64
+      ],
+      "webhookId": "9a6eba0f-8ca0-4d23-a99d-fbd9f3b6d051",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4pVRSNNkuTfq41g8",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "muhammadbinwaseem27@gmail.com",
+        "subject": "=REJECTED — High priority ticket from {{ $(\"Store Ticket\").item.json.name }} [{{ $(\"Store Ticket\").item.json.category }}]",
+        "emailType": "text",
+        "message": "=The sensitive action for this HIGH priority ticket was REJECTED by a human reviewer and has been stopped.\n\nCustomer name: {{ $(\"Store Ticket\").item.json.name }}\nCustomer email: {{ $(\"Store Ticket\").item.json.email }}\nCategory: {{ $(\"Store Ticket\").item.json.category }}\nPriority: {{ $(\"Store Ticket\").item.json.priority }}\nDepartment: {{ $(\"Store Ticket\").item.json.department }}\n\nSummary:\n{{ $(\"Store Ticket\").item.json.summary }}\n\nOriginal message:\n{{ $(\"Store Ticket\").item.json.original_message }}\n\nNo automated sensitive action was performed for this ticket.",
+        "options": {}
+      },
+      "id": "342fb207-f357-4454-b187-a206b0da0a91",
+      "name": "Rejection Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2368,
+        160
+      ],
+      "webhookId": "6ff55800-e3ec-4a7b-ac8f-2e60c5e26796",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4pVRSNNkuTfq41g8",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconsole.log(JSON.stringify({\n  log: 'normal_path',\n  workflow: $workflow.name,\n  executionId: $execution.id,\n  timestamp: new Date().toISOString(),\n  category: $('Store Ticket').item.json.category,\n  priority: $('Store Ticket').item.json.priority,\n  urgentPathTriggered: false\n}));\nreturn items;"
+      },
+      "id": "4bb27454-76f6-4a4e-9172-6be8972462dc",
+      "name": "Log Normal Path",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"status\":\"fallback\",\"message\":\"AI response failed validation\"}",
+        "options": {}
+      },
+      "id": "0dd607f8-bacd-45f5-9f2f-5f7c0b1f06ae",
+      "name": "Fallback",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nfor (const item of items) {\n  const j = item.json || {};\n  console.error(JSON.stringify({\n    log: 'triage_error',\n    workflow: $workflow.name,\n    executionId: $execution.id,\n    timestamp: new Date().toISOString(),\n    status: j.status || 'error',\n    message: j.message || 'AI response failed validation',\n    urgentPathTriggered: false\n  }));\n}\nreturn items;"
+      },
+      "id": "e79ba8ab-74ba-4778-93ad-48b56fdca11b",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        320
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Validate Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Output": {
+      "main": [
+        [
+          {
+            "node": "Switch by Category",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by Category": {
+      "main": [
+        [
+          {
+            "node": "Store Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Ticket": {
+      "main": [
+        [
+          {
+            "node": "Log Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Ticket": {
+      "main": [
+        [
+          {
+            "node": "Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acknowledgment Email": {
+      "main": [
+        [
+          {
+            "node": "Check Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Priority": {
+      "main": [
+        [
+          {
+            "node": "Log Urgent Path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Normal Path",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Urgent Path": {
+      "main": [
+        [
+          {
+            "node": "Human Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Approval": {
+      "main": [
+        [
+          {
+            "node": "Check Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Approval": {
+      "main": [
+        [
+          {
+            "node": "Urgent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rejection Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallback": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8f810d14-879e-459d-8195-92ee48cc6167",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "15d5fb98d517612b50f38341554e1cd63803c9b4773acdbda2390c8a3e51ff22"
+  },
+  "nodeGroups": [
+    {
+      "id": "16e7248b-77c3-438a-a92e-d4d68e99719b",
+      "name": "AI Triage",
+      "nodeIds": [
+        "01a7c189-2e31-431f-a72e-138b8a242b25",
+        "d750c89d-d894-4275-bb5a-7fef81292272",
+        "dd9a08e0-546f-4162-8c47-3de43f8eae01",
+        "98be0ce3-cc14-41a8-960b-d05afabe2e1a"
+      ],
+      "description": "Classify the support message into strict structured JSON and validate it."
+    },
+    {
+      "id": "e825562e-522c-494b-b0a5-076ac65f8a71",
+      "name": "Routing & Storage",
+      "nodeIds": [
+        "711d0ac8-62e4-44c3-a522-315338d86512",
+        "68a63a35-a689-4fef-98c9-de1d19530336",
+        "61600f8a-48ba-4fef-a16b-aae0eeea13aa"
+      ],
+      "description": "Route by category, prepare the ticket record, and log a PII-safe triage entry."
+    },
+    {
+      "id": "32d904a5-89e9-4f88-bf00-16bbeac3ca19",
+      "name": "Notifications",
+      "nodeIds": [
+        "3b0cd9e6-46f1-48e5-b885-c9dab134fb81",
+        "8c84912b-6867-4795-af87-0cf74ab73fec",
+        "c03c76e9-fa09-4b3f-8cd1-191faf9bcc92",
+        "4bb27454-76f6-4a4e-9172-6be8972462dc"
+      ],
+      "description": "Acknowledge the customer, then deterministically route High priority to the urgent path (logged) vs normal (logged)."
+    },
+    {
+      "id": "8da6883f-261d-4a6f-a537-bdcc83211477",
+      "name": "Human Approval",
+      "nodeIds": [
+        "f986e403-088c-4a28-88b9-c8a68ef4d616",
+        "e0b802f5-3267-45e8-8aa8-d2175de90564",
+        "1015061e-34ea-4ffd-8004-75f4af12eec3",
+        "342fb207-f357-4454-b187-a206b0da0a91"
+      ],
+      "description": "Pause for a human decision on High priority tickets; approve to run the sensitive action, reject to stop and notify."
+    },
+    {
+      "id": "bf9a0ba6-6e6a-4790-9d24-55b5b52bd8ca",
+      "name": "Error Handling",
+      "nodeIds": [
+        "0dd607f8-bacd-45f5-9f2f-5f7c0b1f06ae",
+        "e79ba8ab-74ba-4778-93ad-48b56fdca11b"
+      ],
+      "description": "Handle invalid AI output and log the error without PII."
+    }
+  ],
+  "id": "tcDWUDQFYW1cmjZ9",
+  "tags": []
+}
