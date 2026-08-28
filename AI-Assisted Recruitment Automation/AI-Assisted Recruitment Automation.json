@@ -115,23 +115,6 @@
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: \"error\", message: \"Missing required fields. Required: name, email, degree, skills, experience, availability.\" }) }}",
-        "options": {
-          "responseCode": 400
-        }
-      },
-      "id": "9f2bd416-58cc-4f61-9a83-58db41e446b0",
-      "name": "Respond Validation Error",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        448,
-        304
-      ]
-    },
-    {
-      "parameters": {
         "mode": "runOnceForEachItem",
         "jsCode": "const b = $json.body || $json;\nconst clean = (v) => (v === undefined || v === null) ? '' : String(v).trim();\nconst rand = Math.random().toString(36).slice(2, 7).toUpperCase();\nconst candidate_id = 'CAND-' + Date.now().toString(36).toUpperCase() + '-' + rand;\nreturn {\n  candidate_id,\n  name: clean(b.name),\n  email: clean(b.email),\n  degree: clean(b.degree),\n  skills: clean(b.skills),\n  experience: clean(b.experience),\n  availability: clean(b.availability),\n  created_at: new Date().toISOString(),\n};"
       },
@@ -338,7 +321,7 @@
     },
     {
       "parameters": {
-        "model": "llama-3.3-70b-versatile",
+        "model": "openai/gpt-oss-20b",
         "options": {
           "temperature": 0.2
         }
@@ -430,29 +413,6 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "a1",
-              "name": "review_category",
-              "value": "Needs Human Review",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "35fd630c-b746-4f04-aa02-6011a1c9766b",
-      "name": "Needs Human Review",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        1696,
-        208
-      ]
-    },
-    {
-      "parameters": {
         "operation": "sendAndWait",
         "sendTo": "mszsquadmsz@gmail.com",
         "subject": "=Candidate review required: {{ $('Extract Candidate Information').item.json.name }}",
@@ -474,7 +434,7 @@
         1920,
         112
       ],
-      "webhookId": "aaa52c0c-639a-4fba-81cd-cb5eced4f651",
+      "webhookId": "30479d8f-5f3e-4c89-83de-b68b1ff1c56c",
       "credentials": {
         "gmailOAuth2": {
           "id": "5oxoeJuavLdnCfrw",
@@ -553,6 +513,230 @@
     },
     {
       "parameters": {
+        "sendTo": "={{ $('Extract Candidate Information').item.json.email }}",
+        "subject": "={{ $json.final_decision === 'Shortlisted' ? 'Application Update — Shortlisted' : 'Application Update' }}",
+        "emailType": "text",
+        "message": "={{ $json.final_decision === 'Shortlisted' ? 'Dear ' + $('Extract Candidate Information').item.json.name + ',\\n\\nThank you for applying. We are pleased to inform you that your application has been shortlisted. Our recruitment team will contact you regarding the next steps.\\n\\nBest regards,\\nRecruitment Team' : 'Dear ' + $('Extract Candidate Information').item.json.name + ',\\n\\nThank you for taking the time to apply. After careful consideration, we regret to inform you that your application will not proceed further at this stage. We wish you the best in your job search.\\n\\nBest regards,\\nRecruitment Team' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "19df6512-0e80-47b0-899a-9b03b6f0c6fc",
+      "name": "Candidate Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2592,
+        112
+      ],
+      "webhookId": "a22f087d-7e47-41be-9d88-41105348cebf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5oxoeJuavLdnCfrw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1jfg602_ejAWU7uxtfwRhAjxU7tgQfMp26L01_k-Qz0w",
+          "mode": "list",
+          "cachedResultName": "candidates (1)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jfg602_ejAWU7uxtfwRhAjxU7tgQfMp26L01_k-Qz0w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1914772052,
+          "mode": "list",
+          "cachedResultName": "candidates (1)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jfg602_ejAWU7uxtfwRhAjxU7tgQfMp26L01_k-Qz0w/edit#gid=1914772052"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "candidate_id"
+          ],
+          "value": {
+            "candidate_id": "={{ $('Extract Candidate Information').item.json.candidate_id }}",
+            "name": "={{ $('Extract Candidate Information').item.json.name }}",
+            "email": "={{ $('Extract Candidate Information').item.json.email }}",
+            "degree": "={{ $('Extract Candidate Information').item.json.degree }}",
+            "skills": "={{ $('Extract Candidate Information').item.json.skills }}",
+            "experience": "={{ $('Extract Candidate Information').item.json.experience }}",
+            "availability": "={{ $('Extract Candidate Information').item.json.availability }}",
+            "ai_score": "={{ $('AI Candidate Analysis').item.json.output.score }}",
+            "ai_recommendation": "={{ $('AI Candidate Analysis').item.json.output.recommendation }}",
+            "ai_reason": "={{ $('AI Candidate Analysis').item.json.output.reason }}",
+            "final_decision": "={{ $json.final_decision }}",
+            "status": "={{ $json.status }}",
+            "created_at": "={{ $('Extract Candidate Information').item.json.created_at }}",
+            "reviewed_at": "={{ $json.reviewed_at }}"
+          },
+          "schema": [
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "degree",
+              "displayName": "degree",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "skills",
+              "displayName": "skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "experience",
+              "displayName": "experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "availability",
+              "displayName": "availability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_recommendation",
+              "displayName": "ai_recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_reason",
+              "displayName": "ai_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "final_decision",
+              "displayName": "final_decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reviewed_at",
+              "displayName": "reviewed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ae7b86f1-9314-407e-9120-de5827378c21",
+      "name": "Update Candidate Record",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2816,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CQMZxUJfMcfLKHbV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "assignments": {
           "assignments": [
             {
@@ -588,53 +772,42 @@
     },
     {
       "parameters": {
-        "sendTo": "={{ $('Extract Candidate Information').item.json.email }}",
-        "subject": "={{ $json.final_decision === 'Shortlisted' ? 'Application Update — Shortlisted' : 'Application Update' }}",
-        "emailType": "text",
-        "message": "={{ $json.final_decision === 'Shortlisted' ? 'Dear ' + $('Extract Candidate Information').item.json.name + ',\\n\\nThank you for applying. We are pleased to inform you that your application has been shortlisted. Our recruitment team will contact you regarding the next steps.\\n\\nBest regards,\\nRecruitment Team' : 'Dear ' + $('Extract Candidate Information').item.json.name + ',\\n\\nThank you for taking the time to apply. After careful consideration, we regret to inform you that your application will not proceed further at this stage. We wish you the best in your job search.\\n\\nBest regards,\\nRecruitment Team' }}",
-        "options": {
-          "appendAttribution": false
-        }
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "review_category",
+              "value": "Needs Human Review",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       },
-      "id": "19df6512-0e80-47b0-899a-9b03b6f0c6fc",
-      "name": "Candidate Email",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
+      "id": "35fd630c-b746-4f04-aa02-6011a1c9766b",
+      "name": "Needs Human Review",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
       "position": [
-        2592,
-        112
-      ],
-      "webhookId": "7d02ae10-00a4-4025-af15-1547039cec15",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "5oxoeJuavLdnCfrw",
-          "name": "Gmail account"
-        }
-      }
+        1696,
+        208
+      ]
     },
     {
       "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "",
-          "cachedResultName": "Recruitment Candidates"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "list",
-          "value": "",
-          "cachedResultName": "Candidates"
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: \"error\", message: \"Missing required fields. Required: name, email, degree, skills, experience, availability.\" }) }}",
+        "options": {
+          "responseCode": 400
         }
       },
-      "id": "ae7b86f1-9314-407e-9120-de5827378c21",
-      "name": "Update Candidate Record",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "id": "9f2bd416-58cc-4f61-9a83-58db41e446b0",
+      "name": "Respond Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
       "position": [
-        2816,
-        112
+        448,
+        304
       ]
     }
   ],
@@ -764,17 +937,6 @@
         ]
       ]
     },
-    "Needs Human Review": {
-      "main": [
-        [
-          {
-            "node": "Human Review",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Human Review": {
       "main": [
         [
@@ -811,6 +973,11 @@
             "node": "Candidate Email",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Update Candidate Record",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -822,15 +989,20 @@
             "node": "Candidate Email",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Update Candidate Record",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     },
-    "Candidate Email": {
+    "Needs Human Review": {
       "main": [
         [
           {
-            "node": "Update Candidate Record",
+            "node": "Human Review",
             "type": "main",
             "index": 0
           }
@@ -843,8 +1015,9 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "08851314-da93-4878-a4a4-f88b21446508",
+  "versionId": "d4902975-5127-45a2-80b4-d95f87195d74",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "8a576a87275fa20d8b0ec4964d8a5d00c6c6631a483f08a3333257847ee7efa5"
   },
   "nodeGroups": [
