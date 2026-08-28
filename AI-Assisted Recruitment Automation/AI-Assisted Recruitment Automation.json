@@ -1,0 +1,892 @@
+{
+  "name": "AI-Assisted Recruitment Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "candidate-application",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1d72cf1c-ac4c-4214-a581-427b16d9a033",
+      "name": "Candidate Application",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        208
+      ],
+      "webhookId": "d734e26d-8822-4908-9da7-9f12346eee66"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.body.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "c3",
+              "leftValue": "={{ $json.body.degree }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "c4",
+              "leftValue": "={{ $json.body.skills }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "c5",
+              "leftValue": "={{ $json.body.experience }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "c6",
+              "leftValue": "={{ $json.body.availability }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0e332cc4-f6a8-4241-9373-46fb60a37d35",
+      "name": "Validate Application",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: \"received\", message: \"Application received and is being reviewed.\" }) }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "2be9c36e-440c-4eec-8ee0-325d88a860a0",
+      "name": "Respond Received",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: \"error\", message: \"Missing required fields. Required: name, email, degree, skills, experience, availability.\" }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "9f2bd416-58cc-4f61-9a83-58db41e446b0",
+      "name": "Respond Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || $json;\nconst clean = (v) => (v === undefined || v === null) ? '' : String(v).trim();\nconst rand = Math.random().toString(36).slice(2, 7).toUpperCase();\nconst candidate_id = 'CAND-' + Date.now().toString(36).toUpperCase() + '-' + rand;\nreturn {\n  candidate_id,\n  name: clean(b.name),\n  email: clean(b.email),\n  degree: clean(b.degree),\n  skills: clean(b.skills),\n  experience: clean(b.experience),\n  availability: clean(b.availability),\n  created_at: new Date().toISOString(),\n};"
+      },
+      "id": "276a9a8a-fa40-45f1-adda-ee746dada26d",
+      "name": "Extract Candidate Information",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jfg602_ejAWU7uxtfwRhAjxU7tgQfMp26L01_k-Qz0w",
+          "mode": "list",
+          "cachedResultName": "candidates (1)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jfg602_ejAWU7uxtfwRhAjxU7tgQfMp26L01_k-Qz0w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1914772052,
+          "mode": "list",
+          "cachedResultName": "candidates (1)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jfg602_ejAWU7uxtfwRhAjxU7tgQfMp26L01_k-Qz0w/edit#gid=1914772052"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "degree",
+              "displayName": "degree",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "skills",
+              "displayName": "skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "experience",
+              "displayName": "experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "availability",
+              "displayName": "availability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_recommendation",
+              "displayName": "ai_recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_reason",
+              "displayName": "ai_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "final_decision",
+              "displayName": "final_decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reviewed_at",
+              "displayName": "reviewed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "183277e9-7b15-4e2c-a0cd-10487b9b99be",
+      "name": "Store Candidate Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CQMZxUJfMcfLKHbV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following candidate application.\n\nCandidate name: {{ $('Extract Candidate Information').item.json.name }}\nDegree: {{ $('Extract Candidate Information').item.json.degree }}\nSkills (raw): {{ $('Extract Candidate Information').item.json.skills }}\nExperience: {{ $('Extract Candidate Information').item.json.experience }}\nAvailability: {{ $('Extract Candidate Information').item.json.availability }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an AI recruitment assistant. Your role is to analyze candidate applications and provide decision support to an authorized human reviewer.\n\nYou must only use information provided in the candidate application.\n\nExtract the candidate's skills and evaluate how well the provided qualifications match the recruitment requirements.\n\nReturn a score from 0-100, an advisory recommendation, and a short reason.\n\nYou must not invent experience, education, skills, or qualifications.\n\nYour recommendation is NOT the final hiring decision.\n\nThe final shortlist/reject decision must always be made by an authorized human reviewer.\n\nRules:\n- score must be an integer from 0 to 100.\n- recommendation must be exactly \"Shortlist\" or \"Reject\".\n- skills must be an array of strings taken only from the application.\n- reason must be one short sentence explaining the recommendation.\n- Do not invent qualifications or experience; use only the supplied application data.\n- Return only the structured JSON requested, nothing else."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "64288cb6-918a-4ceb-94ae-03850d39a095",
+      "name": "AI Candidate Analysis",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1120,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "f43b8eb2-c364-481d-9696-3b4d5e83d8ab",
+      "name": "Groq Llama Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        336
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "ieZLBosecTdgj99J",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"candidate\": { \"type\": \"string\" },\n    \"skills\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n    \"score\": { \"type\": \"integer\", \"minimum\": 0, \"maximum\": 100 },\n    \"recommendation\": { \"type\": \"string\", \"enum\": [\"Shortlist\", \"Reject\"] },\n    \"reason\": { \"type\": \"string\" }\n  },\n  \"required\": [\"candidate\", \"skills\", \"score\", \"recommendation\", \"reason\"],\n  \"additionalProperties\": false\n}"
+      },
+      "id": "cadfb2e7-eeff-4a35-8864-67665f53837c",
+      "name": "Structured Output Validation",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "score-gte-70",
+              "leftValue": "={{ $json.output.score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "67a7585e-8cc1-4c7e-93eb-3e643dcfae46",
+      "name": "Rule-Based Assessment",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1472,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "review_category",
+              "value": "Recommended for Human Review",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "371b8f06-3824-4bb8-bfd6-51b381641987",
+      "name": "Recommended for Human Review",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1696,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "review_category",
+              "value": "Needs Human Review",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "35fd630c-b746-4f04-aa02-6011a1c9766b",
+      "name": "Needs Human Review",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1696,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "mszsquadmsz@gmail.com",
+        "subject": "=Candidate review required: {{ $('Extract Candidate Information').item.json.name }}",
+        "message": "=A candidate application is awaiting your final decision.\n\nCandidate ID: {{ $('Extract Candidate Information').item.json.candidate_id }}\nName: {{ $('Extract Candidate Information').item.json.name }}\nEmail: {{ $('Extract Candidate Information').item.json.email }}\nDegree: {{ $('Extract Candidate Information').item.json.degree }}\nSkills: {{ $('Extract Candidate Information').item.json.skills }}\nExperience: {{ $('Extract Candidate Information').item.json.experience }}\nAvailability: {{ $('Extract Candidate Information').item.json.availability }}\n\n--- AI advisory analysis (not a final decision) ---\nAI score: {{ $('AI Candidate Analysis').item.json.output.score }}\nAI recommendation: {{ $('AI Candidate Analysis').item.json.output.recommendation }}\nAI reason: {{ $('AI Candidate Analysis').item.json.output.reason }}\nExtracted skills: {{ $('AI Candidate Analysis').item.json.output.skills.join(', ') }}\n\nApprove = Shortlist the candidate. Reject = Reject the candidate.\nYour decision is final.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Shortlist",
+            "disapproveLabel": "Reject"
+          }
+        },
+        "options": {}
+      },
+      "id": "c3d7d2cc-e543-405b-9516-7af0a524e3d2",
+      "name": "Human Review",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        112
+      ],
+      "webhookId": "aaa52c0c-639a-4fba-81cd-cb5eced4f651",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5oxoeJuavLdnCfrw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "approved",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8140e4f7-a7b1-4945-b77f-f4eac2343b7d",
+      "name": "Human Decision",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2144,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1",
+              "name": "final_decision",
+              "value": "Shortlisted",
+              "type": "string"
+            },
+            {
+              "id": "d2",
+              "name": "status",
+              "value": "Human Approved",
+              "type": "string"
+            },
+            {
+              "id": "d3",
+              "name": "reviewed_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fcf00c12-3594-4168-af85-25d2a1f7e115",
+      "name": "Shortlist",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2368,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1",
+              "name": "final_decision",
+              "value": "Rejected",
+              "type": "string"
+            },
+            {
+              "id": "d2",
+              "name": "status",
+              "value": "Human Rejected",
+              "type": "string"
+            },
+            {
+              "id": "d3",
+              "name": "reviewed_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7fbb2808-8ee5-4786-887c-54ac8a61d49a",
+      "name": "Reject",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2368,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Extract Candidate Information').item.json.email }}",
+        "subject": "={{ $json.final_decision === 'Shortlisted' ? 'Application Update — Shortlisted' : 'Application Update' }}",
+        "emailType": "text",
+        "message": "={{ $json.final_decision === 'Shortlisted' ? 'Dear ' + $('Extract Candidate Information').item.json.name + ',\\n\\nThank you for applying. We are pleased to inform you that your application has been shortlisted. Our recruitment team will contact you regarding the next steps.\\n\\nBest regards,\\nRecruitment Team' : 'Dear ' + $('Extract Candidate Information').item.json.name + ',\\n\\nThank you for taking the time to apply. After careful consideration, we regret to inform you that your application will not proceed further at this stage. We wish you the best in your job search.\\n\\nBest regards,\\nRecruitment Team' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "19df6512-0e80-47b0-899a-9b03b6f0c6fc",
+      "name": "Candidate Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2592,
+        112
+      ],
+      "webhookId": "7d02ae10-00a4-4025-af15-1547039cec15",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5oxoeJuavLdnCfrw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Recruitment Candidates"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Candidates"
+        }
+      },
+      "id": "ae7b86f1-9314-407e-9120-de5827378c21",
+      "name": "Update Candidate Record",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2816,
+        112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Candidate Application": {
+      "main": [
+        [
+          {
+            "node": "Validate Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Application": {
+      "main": [
+        [
+          {
+            "node": "Respond Received",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Received": {
+      "main": [
+        [
+          {
+            "node": "Extract Candidate Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Candidate Information": {
+      "main": [
+        [
+          {
+            "node": "Store Candidate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Candidate Data": {
+      "main": [
+        [
+          {
+            "node": "AI Candidate Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Candidate Analysis": {
+      "main": [
+        [
+          {
+            "node": "Rule-Based Assessment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Llama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Candidate Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Validation": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Candidate Analysis",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rule-Based Assessment": {
+      "main": [
+        [
+          {
+            "node": "Recommended for Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Needs Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recommended for Human Review": {
+      "main": [
+        [
+          {
+            "node": "Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Human Review": {
+      "main": [
+        [
+          {
+            "node": "Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Review": {
+      "main": [
+        [
+          {
+            "node": "Human Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Decision": {
+      "main": [
+        [
+          {
+            "node": "Shortlist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shortlist": {
+      "main": [
+        [
+          {
+            "node": "Candidate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reject": {
+      "main": [
+        [
+          {
+            "node": "Candidate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidate Email": {
+      "main": [
+        [
+          {
+            "node": "Update Candidate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "08851314-da93-4878-a4a4-f88b21446508",
+  "meta": {
+    "instanceId": "8a576a87275fa20d8b0ec4964d8a5d00c6c6631a483f08a3333257847ee7efa5"
+  },
+  "nodeGroups": [
+    {
+      "id": "97b98e5e-8b7f-430a-ad74-84031a96c653",
+      "name": "Intake & Validation",
+      "nodeIds": [
+        "0e332cc4-f6a8-4241-9373-46fb60a37d35",
+        "2be9c36e-440c-4eec-8ee0-325d88a860a0",
+        "9f2bd416-58cc-4f61-9a83-58db41e446b0",
+        "276a9a8a-fa40-45f1-adda-ee746dada26d",
+        "183277e9-7b15-4e2c-a0cd-10487b9b99be"
+      ],
+      "description": "Receive the application, validate required fields, normalize data, and store the original candidate record."
+    },
+    {
+      "id": "3bce4b57-80bc-435b-b4d5-59064683d07e",
+      "name": "AI Analysis",
+      "nodeIds": [
+        "64288cb6-918a-4ceb-94ae-03850d39a095",
+        "f43b8eb2-c364-481d-9696-3b4d5e83d8ab",
+        "cadfb2e7-eeff-4a35-8864-67665f53837c"
+      ],
+      "description": "Advisory AI scoring and skills extraction with structured-output validation. The AI never makes the final decision."
+    },
+    {
+      "id": "222e0acf-17f4-49c4-9219-838d1066a7ca",
+      "name": "Review, Decision & Notify",
+      "nodeIds": [
+        "67a7585e-8cc1-4c7e-93eb-3e643dcfae46",
+        "371b8f06-3824-4bb8-bfd6-51b381641987",
+        "35fd630c-b746-4f04-aa02-6011a1c9766b",
+        "c3d7d2cc-e543-405b-9516-7af0a524e3d2",
+        "8140e4f7-a7b1-4945-b77f-f4eac2343b7d",
+        "fcf00c12-3594-4168-af85-25d2a1f7e115",
+        "7fbb2808-8ee5-4786-887c-54ac8a61d49a",
+        "19df6512-0e80-47b0-899a-9b03b6f0c6fc",
+        "ae7b86f1-9314-407e-9120-de5827378c21"
+      ],
+      "description": "Rule-based categorization, human approval (final decision), then candidate email and record update."
+    }
+  ],
+  "id": "c5Ty7ndT7yJQIcFd",
+  "tags": []
+}
