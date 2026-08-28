@@ -399,3 +399,5 @@ This prevents the AI from independently making consequential recruitment decisio
 - Add more advanced monitoring and alerting.
 - Add role-based access control for reviewers.
 - Add multilingual candidate processing.
+
+#Demo Link:- https://drive.google.com/file/d/1VEw39nHhfo1e5YidtmgIB_TKmJBVznxn/view?usp=sharing
