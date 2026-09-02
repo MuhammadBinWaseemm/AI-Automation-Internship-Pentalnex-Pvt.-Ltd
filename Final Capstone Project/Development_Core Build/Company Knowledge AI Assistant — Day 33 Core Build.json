@@ -1,0 +1,486 @@
+{
+  "name": "Company Knowledge AI Assistant — Day 33 Core Build",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "70c99bc0-80f5-488c-925d-965412f3d7be",
+      "name": "User Question",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        96
+      ],
+      "webhookId": "bf150988-14ac-41e2-8f6e-093c7b585107"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.chatInput;\n\n// A question must exist and be a string\nif (raw === undefined || raw === null || typeof raw !== 'string') {\n  return { valid: false, error: 'Question cannot be empty' };\n}\n\n// Trim whitespace and confirm it is not empty\nconst cleaned = raw.trim();\nif (cleaned === '') {\n  return { valid: false, error: 'Question cannot be empty' };\n}\n\nreturn { valid: true, question: cleaned };"
+      },
+      "id": "8c356f91-de6f-4672-862a-f562e76064a4",
+      "name": "Validate User Question",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "df579d30-05ca-4e2c-a71c-82aeae395af4",
+      "name": "Question Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const question = $json.question;\nconst lower = question.toLowerCase();\nconst received_at = new Date().toISOString();\n\n// RULE 3 — Priority detection\nconst urgentTerms = ['urgent', 'urgently', 'emergency', 'immediately', 'critical'];\nconst priority = urgentTerms.some(function (t) { return lower.includes(t); }) ? 'High' : 'Normal';\n\n// RULE 1 — Request length (too short)\nif (question.length < 5) {\n  return {\n    question: question,\n    request_type: 'unknown',\n    priority: priority,\n    status: 'rejected',\n    reason: 'Question is too short',\n    received_at: received_at,\n  };\n}\n\n// RULE 2 — Company knowledge detection\nconst knowledgeTerms = [\n  'company', 'policy', 'policies', 'sop', 'procedure', 'hr', 'leave',\n  'holiday', 'attendance', 'employee', 'work', 'office', 'remote',\n  'salary', 'benefits', 'security', 'onboarding', 'internship',\n  'working hours', 'guidelines'\n];\nconst isKnowledge = knowledgeTerms.some(function (t) { return lower.includes(t); });\n\n// RULE 4 — Final deterministic status\nif (isKnowledge) {\n  return {\n    question: question,\n    request_type: 'knowledge_query',\n    priority: priority,\n    status: 'approved_for_processing',\n    reason: 'Company knowledge request',\n    received_at: received_at,\n  };\n}\n\nreturn {\n  question: question,\n  request_type: 'unsupported_query',\n  priority: priority,\n  status: 'unsupported',\n  reason: 'Not identified as a company knowledge request',\n  received_at: received_at,\n};"
+      },
+      "id": "1e8f5235-d29b-4ab3-98ee-0356095973a0",
+      "name": "Apply Business Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "approved_for_processing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "approved_for_processing"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "unsupported",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "unsupported"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "rejected",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "rejected"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ab4e2f3e-a4b7-49df-bd1f-5f639f8dbdee",
+      "name": "Route Request",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "assistant_requests",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "question",
+              "fieldValue": "={{ $json.question }}"
+            },
+            {
+              "fieldId": "request_type",
+              "fieldValue": "={{ $json.request_type }}"
+            },
+            {
+              "fieldId": "priority",
+              "fieldValue": "={{ $json.priority }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "reason",
+              "fieldValue": "={{ $json.reason }}"
+            },
+            {
+              "fieldId": "received_at",
+              "fieldValue": "={{ $json.received_at }}"
+            }
+          ]
+        }
+      },
+      "id": "09920fc5-846b-4d9d-96d7-391042731763",
+      "name": "Store Knowledge Request",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZhLW9Omp8hqFKUP9",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  success: true,\n  message: 'Knowledge request accepted for processing.',\n  request_type: $json.request_type,\n  priority: $json.priority,\n  status: 'approved_for_processing',\n};"
+      },
+      "id": "ba05ed17-c45d-4b2b-a1c1-473e3b60fc56",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "assistant_requests",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "question",
+              "fieldValue": "={{ $json.question }}"
+            },
+            {
+              "fieldId": "request_type",
+              "fieldValue": "={{ $json.request_type }}"
+            },
+            {
+              "fieldId": "priority",
+              "fieldValue": "={{ $json.priority }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "reason",
+              "fieldValue": "={{ $json.reason }}"
+            },
+            {
+              "fieldId": "received_at",
+              "fieldValue": "={{ $json.received_at }}"
+            }
+          ]
+        }
+      },
+      "id": "0487d12d-7ad5-4b9c-ad35-c05eb0fb99ec",
+      "name": "Store Unsupported Request",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        192
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZhLW9Omp8hqFKUP9",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  success: false,\n  message: 'This request is outside the company knowledge scope.',\n  status: 'unsupported',\n};"
+      },
+      "id": "cc8a4b86-9ebb-4c83-88e9-77d4e5b2c4a9",
+      "name": "Return Unsupported Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  success: false,\n  message: 'Please provide a more detailed question.',\n  status: 'rejected',\n};"
+      },
+      "id": "6b30df8f-c171-4b15-9163-093929ebffa7",
+      "name": "Return Business Rule Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  success: false,\n  error: 'Please provide a valid question.',\n};"
+      },
+      "id": "e6598119-a548-41c5-83e9-c8f2c7a5d4fa",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        192
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "User Question": {
+      "main": [
+        [
+          {
+            "node": "Validate User Question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate User Question": {
+      "main": [
+        [
+          {
+            "node": "Question Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question Valid?": {
+      "main": [
+        [
+          {
+            "node": "Apply Business Rules",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Business Rules": {
+      "main": [
+        [
+          {
+            "node": "Route Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Request": {
+      "main": [
+        [
+          {
+            "node": "Store Knowledge Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Unsupported Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Business Rule Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Knowledge Request": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Unsupported Request": {
+      "main": [
+        [
+          {
+            "node": "Return Unsupported Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6eead365-bd78-4dd2-923a-8075ece3dd83",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2c854cbd47d3b9c2fac15a4a4e53cdb94782234d4ea86eb380751ced5aaa3444"
+  },
+  "nodeGroups": [
+    {
+      "id": "0e56973d-2f6a-4eaa-b7b0-25a2ce2862f2",
+      "name": "Validation & Routing",
+      "nodeIds": [
+        "8c356f91-de6f-4672-862a-f562e76064a4",
+        "df579d30-05ca-4e2c-a71c-82aeae395af4"
+      ],
+      "description": "Deterministically validates the incoming question and routes on validity."
+    },
+    {
+      "id": "357d27a9-826f-4668-895a-24fd50dbc967",
+      "name": "Business Rules",
+      "nodeIds": [
+        "1e8f5235-d29b-4ab3-98ee-0356095973a0",
+        "ab4e2f3e-a4b7-49df-bd1f-5f639f8dbdee"
+      ],
+      "description": "Applies deterministic business rules and routes by resulting status."
+    },
+    {
+      "id": "e2a74ff7-fc08-480e-8c17-60defad137c9",
+      "name": "Knowledge Request",
+      "nodeIds": [
+        "09920fc5-846b-4d9d-96d7-391042731763",
+        "ba05ed17-c45d-4b2b-a1c1-473e3b60fc56"
+      ],
+      "description": "Stores approved knowledge requests in Supabase and returns a success response."
+    },
+    {
+      "id": "27c88a15-49d4-48dc-959d-dd0bf70faeea",
+      "name": "Unsupported Request",
+      "nodeIds": [
+        "0487d12d-7ad5-4b9c-ad35-c05eb0fb99ec",
+        "cc8a4b86-9ebb-4c83-88e9-77d4e5b2c4a9"
+      ],
+      "description": "Stores unsupported requests in Supabase and returns an out-of-scope response."
+    },
+    {
+      "id": "78600c62-da0c-4346-830d-9dd953a90997",
+      "name": "Rejected Request",
+      "nodeIds": [
+        "6b30df8f-c171-4b15-9163-093929ebffa7"
+      ],
+      "description": "Returns a business-rule rejection response without storing."
+    },
+    {
+      "id": "a2d1cffc-f28e-4818-8979-582dd4c5df09",
+      "name": "Invalid Input",
+      "nodeIds": [
+        "e6598119-a548-41c5-83e9-c8f2c7a5d4fa"
+      ],
+      "description": "Returns a validation error for empty or invalid questions."
+    }
+  ],
+  "id": "uXQwt8B30DRIPu7H",
+  "tags": []
+}
